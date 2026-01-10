@@ -1,11 +1,11 @@
 # Digital IC Card App
 
-Expo、Supabase（ローカル）、TypeScriptを使用したモバイルアプリケーション。
+Expo、Supabase（ローカル）、TypeScript を使用したモバイルアプリケーション。
 
 ## 必要な環境
 
-- Node.js (v22.12.0以上)
-- npm (v10.9.0以上)
+- Node.js (v22.12.0 以上)
+- npm (v10.9.0 以上)
 - Supabase CLI
 - Docker Desktop (Supabase ローカル環境用)
 
@@ -17,13 +17,13 @@ Expo、Supabase（ローカル）、TypeScriptを使用したモバイルアプ�
 npm install
 ```
 
-### 2. ローカルSupabaseの起動
+### 2. ローカル Supabase の起動
 
 ```bash
 npm run supabase:start
 ```
 
-初回起動時はDockerイメージのダウンロードに時間がかかります。
+初回起動時は Docker イメージのダウンロードに時間がかかります。
 起動後、以下の情報が表示されます：
 
 - API URL: http://127.0.0.1:54321
@@ -32,11 +32,11 @@ npm run supabase:start
 
 ### 3. 環境変数の確認
 
-`.env`ファイルにローカルSupabaseの接続情報が設定されています：
+`.env`ファイルにローカル Supabase の接続情報が設定されています：
 
 ```
 EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+EXPO_PUBLIC_SUPABASE_ANON_KEY=ANON_KEY
 ```
 
 ## 開発
@@ -49,11 +49,11 @@ npm start
 
 起動後、以下のオプションから選択できます：
 
-- `a` - Androidエミュレーターで起動
-- `i` - iOSシミュレーターで起動（macOSのみ）
-- `w` - Webブラウザで起動
+- `a` - Android エミュレーターで起動
+- `i` - iOS シミュレーターで起動（macOS のみ）
+- `w` - Web ブラウザで起動
 
-### Supabaseコマンド
+### Supabase コマンド
 
 ```bash
 # ローカルSupabaseの起動
@@ -68,7 +68,7 @@ npm run supabase:status
 
 ### Supabase Studio
 
-ローカルSupabaseが起動している間、以下のURLでSupabase Studioにアクセスできます：
+ローカル Supabase が起動している間、以下の URL で Supabase Studio にアクセスできます：
 
 http://127.0.0.1:54323
 
@@ -91,7 +91,7 @@ digital_iccard_app/
 
 ## 技術スタック
 
-- **Expo** - React Nativeフレームワーク
+- **Expo** - React Native フレームワーク
 - **TypeScript** - 型安全な開発
 - **Supabase** - バックエンド（認証、データベース、ストレージ）
 - **React Native** - モバイルアプリケーション開発
