@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-17 15:30
+最終更新: 2026-01-17 17:00
 
 ## 現在の状態
 
@@ -48,17 +48,84 @@
 
   - [x] 各テーブルに対し、適切な RLS ポリシーを設定し、データアクセス権限を制御
 
+- [x] Phase 3: フロントエンド (React Native) の開発 - UI/UX と基本機能
+
+  1.  **ナビゲーションの実装**
+
+  - [x] Expo Routerを用いた画面遷移とタブナビゲーションの実装
+  - [x] 認証フローの自動ナビゲーション
+
+  2.  **認証 UI/UX の実装**
+
+  - [x] ログイン、サインアップ画面の作成とSupabase Authenticationとの連携
+  - [x] 認証コンテキスト（AuthContext）の実装
+
+  3.  **メイン画面の UI/UX 実装**
+
+  - [x] 残高表示コンポーネントの実装とSupabaseからのデータフェッチ
+  - [x] 定期券情報表示コンポーネントの実装とデータフェッチ
+  - [x] QRコード切符表示コンポーネントの実装と表示条件のロジック
+
+  4.  **利用履歴機能の実装**
+
+  - [x] 利用履歴一覧画面の作成
+  - [x] Supabaseからのトランザクションデータフェッチと表示
+
+  5.  **設定画面の基本実装**
+
+  - [x] ユーザー情報表示、ログアウト機能
+
 ### 現在作業中のフェーズ
 
-- [ ] Phase 3: フロントエンド (React Native) の開発 - UI/UX と基本機能 ← **次回ここから開始**
+- [ ] Phase 4: 決済機能の開発 **(モック実装)** ← **次回ここから開始**
 
 ### 次のフェーズ
 
-- [ ] Phase 4: 決済機能の開発 **(モック実装)**
 - [ ] Phase 5: 定期券・QR コード切符機能の開発
 - [ ] Phase 6: テストとデバッグ、学習/検証
 
 ## 最新の作業内容
+
+### 2026-01-17 セッション（Phase 3 完了）
+
+**実装したもの:**
+
+- プロジェクト構造のセットアップ（src/components, hooks, services, contexts, types, utils, constants）
+- TypeScript型定義ファイル（src/types/database.ts）
+- 認証コンテキスト（src/contexts/AuthContext.tsx）
+- ルートレイアウト（src/app/_layout.tsx）による認証フローの自動ナビゲーション
+- ログイン画面（src/app/login.tsx）
+- サインアップ画面（src/app/signup.tsx）
+- タブナビゲーション（src/app/(tabs)/_layout.tsx）
+- ホーム画面（src/app/(tabs)/index.tsx）
+- 利用履歴画面（src/app/(tabs)/history.tsx）
+- チャージ画面（src/app/(tabs)/charge.tsx - Phase 4実装予定の表示）
+- 設定画面（src/app/(tabs)/settings.tsx）
+- Supabaseサービスレイヤー（src/services/accountService.ts）
+- 新規ユーザー登録時のアカウント自動作成トリガー
+- index.tsの削除（Expo Routerが自動処理）
+- @expo/vector-icons, @types/react-nativeのインストール
+
+**発生した問題:**
+
+1. TypeScriptコンパイルエラー
+   - `./src/app`モジュールが見つからない → index.tsを削除（Expo Routerが自動処理）
+   - `@expo/vector-icons`が見つからない → 明示的にインストール
+
+**ブランチ戦略:**
+
+- `develop`ブランチを`main`から作成
+- `feature/phase3-ui-ux`ブランチを`develop`から作成
+- PR作成: https://github.com/daisuke08253649/digital_iccard_app/pull/new/feature/phase3-ui-ux
+
+**CodeRabbit CLI の指摘:**
+
+CodeRabbit CLIが未インストールのため、GitHub上のCodeRabbitでレビュー実施予定
+
+**次回やること:**
+
+- PR承認後、developブランチにマージ
+- Phase 4: 決済機能の開発（モック実装）
 
 ### 2026-01-17 セッション（Phase 2 完了）
 
@@ -116,8 +183,10 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 
 ## ブランチ情報
 
-- 現在のブランチ: `main`
-- 次に作成予定: `develop`ブランチを作成し、以降は feature ブランチで作業
+- 現在のブランチ: `feature/phase3-ui-ux`
+- `main`ブランチ: 安定版（Phase 2まで完了）
+- `develop`ブランチ: 開発用メインブランチ（作成済み）
+- `feature/phase3-ui-ux`: Phase 3実装ブランチ（PR作成済み）
 
 ## 重要なファイル
 
