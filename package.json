@@ -12,6 +12,7 @@
     "supabase:status": "supabase status"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@supabase/supabase-js": "^2.90.1",
     "expo": "~54.0.31",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "@types/react-native": "^0.72.8",
     "typescript": "~5.9.2"
   },
   "private": true
