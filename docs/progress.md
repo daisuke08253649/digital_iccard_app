@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-17 13:00
+最終更新: 2026-01-17 15:30
 
 ## 現在の状態
 
@@ -32,48 +32,61 @@
 
   - [x] Supabase Authentication の基本設定（メール/パスワード）
 
-### 現在作業中のフェーズ
-
-- [ ] Phase 2: バックエンド (Supabase) の開発 ← **次回ここから開始**
+- [x] Phase 2: バックエンド (Supabase) の開発
 
   1.  **データベーススキーマの設計と実装**
 
-  - [ ] `users` テーブルの作成
-  - [ ] `accounts` テーブルの作成と `users` とのリレーション設定
-  - [ ] `payment_methods` テーブルの作成と `users` とのリレーション設定 (モック決済用に必要最低限の情報を保持)
-  - [ ] `transactions` テーブルの作成と `accounts` とのリレーション設定
-  - [ ] `commuter_passes` テーブルの作成と `accounts` とのリレーション設定
-  - [ ] `qr_tickets` テーブルの作成と `accounts` とのリレーション設定
-  - [ ] 各テーブルへのインデックス設定、制約（NOT NULL, UNIQUE）の定義
+  - [x] `users` テーブルの作成
+  - [x] `accounts` テーブルの作成と `users` とのリレーション設定
+  - [x] `payment_methods` テーブルの作成と `users` とのリレーション設定 (モック決済用に必要最低限の情報を保持)
+  - [x] `transactions` テーブルの作成と `accounts` とのリレーション設定
+  - [x] `commuter_passes` テーブルの作成と `accounts` とのリレーション設定
+  - [x] `qr_tickets` テーブルの作成と `accounts` とのリレーション設定
+  - [x] 各テーブルへのインデックス設定、制約（NOT NULL, UNIQUE）の定義
 
   2.  **Row Level Security (RLS) の設定**
 
-  - [ ] 各テーブルに対し、適切な RLS ポリシーを設定し、データアクセス権限を制御
+  - [x] 各テーブルに対し、適切な RLS ポリシーを設定し、データアクセス権限を制御
+
+### 現在作業中のフェーズ
+
+- [ ] Phase 3: フロントエンド (React Native) の開発 - UI/UX と基本機能 ← **次回ここから開始**
 
 ### 次のフェーズ
 
-- [ ] Phase 3: フロントエンド (React Native) の開発 - UI/UX と基本機能
 - [ ] Phase 4: 決済機能の開発 **(モック実装)**
+- [ ] Phase 5: 定期券・QR コード切符機能の開発
+- [ ] Phase 6: テストとデバッグ、学習/検証
 
 ## 最新の作業内容
 
-### 2026-01-17 セッション
+### 2026-01-17 セッション（Phase 2 完了）
 
 **実装したもの:**
 
-- progress.md の初期テンプレート作成
-- プロジェクト計画の整理
+- データベースマイグレーションファイルの作成（`supabase/migrations/20260117061912_create_initial_schema.sql`）
+- 全6テーブルの作成（users, accounts, payment_methods, transactions, commuter_passes, qr_tickets）
+- 各テーブルへの適切なインデックス設定
+- 外部キー制約とチェック制約の設定
+- Row Level Security (RLS) の有効化と各テーブルへのポリシー設定
+- updated_at自動更新トリガーの実装
+- .gitignoreへの一時ファイルパターン追加
 
 **発生した問題:**
-なし
+
+1. 最初のマイグレーション適用時に認証エラーが発生
+   - 解決策: Supabaseを完全停止して再起動することで解決
+2. Docker volumeの重複エラー
+   - 解決策: `--no-backup`オプションで停止し、クリーンな状態から再起動
 
 **CodeRabbit CLI の指摘:**
-まだコード未作成のため、なし
+Phase 2ではSQLマイグレーションファイルのみのため、チェック対象外
 
 **次回やること:**
 
-- データベーススキーマの設計と実装
-- Row Level Security (RLS) の設定
+- Phase 3: フロントエンド (React Native) の開発開始
+- ナビゲーションの実装
+- 認証 UI/UX の実装
 
 ## 技術的な決定事項
 
@@ -85,6 +98,17 @@
 - UI ライブラリ: React Native Paper
 - ルーティング: Expo Router
 - テスト: Jest + React Native Testing Library
+
+### データベース設計の決定
+
+- PostgreSQL 17を使用
+- すべてのテーブルにUUID主キーを使用（`gen_random_uuid()`）
+- updated_atカラムの自動更新にはトリガー関数を使用
+- RLSポリシーで`auth.uid()`を使用してユーザー認証を実装
+- 外部キー制約に`ON DELETE CASCADE`を設定し、ユーザー削除時の整合性を保証
+- NUMERIC(10, 2)型で金額を管理（小数点以下2桁まで）
+- CHECK制約で残高・価格が負にならないよう制御
+- ステータスフィールドにはENUM的なCHECK制約を使用
 
 ## 未解決の課題
 
