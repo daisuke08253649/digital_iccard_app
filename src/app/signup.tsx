@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { TextInput, Button, Text, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -13,6 +13,15 @@ export default function SignUpScreen() {
   const [success, setSuccess] = useState('');
   const { signUp } = useAuth();
   const router = useRouter();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
@@ -37,7 +46,7 @@ export default function SignUpScreen() {
     try {
       await signUp(email, password);
       setSuccess('登録が完了しました。確認メールをご確認ください。');
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         router.replace('/login');
       }, 2000);
     } catch (err) {

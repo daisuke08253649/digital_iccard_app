@@ -5,9 +5,30 @@ CREATE OR REPLACE FUNCTION create_user_account()
 RETURNS TRIGGER AS $$
 DECLARE
   random_card_number TEXT;
+  card_exists BOOLEAN;
+  max_attempts INT := 10;
+  attempt_count INT := 0;
 BEGIN
-  -- ランダムなカード番号を生成（16桁）
-  random_card_number := LPAD(FLOOR(RANDOM() * 10000000000000000)::TEXT, 16, '0');
+  -- ランダムなカード番号を生成（16桁）、重複チェック付き
+  LOOP
+    -- 4桁ずつ生成して連結することで精度を向上
+    random_card_number :=
+      LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0') ||
+      LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0') ||
+      LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0') ||
+      LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0');
+
+    -- カード番号の重複チェック
+    SELECT EXISTS(SELECT 1 FROM public.accounts WHERE card_number = random_card_number) INTO card_exists;
+
+    EXIT WHEN NOT card_exists OR attempt_count >= max_attempts;
+    attempt_count := attempt_count + 1;
+  END LOOP;
+
+  -- 最大試行回数を超えた場合はエラー
+  IF card_exists THEN
+    RAISE EXCEPTION 'Failed to generate unique card number after % attempts', max_attempts;
+  END IF;
 
   -- accountsテーブルに新規アカウントを作成
   INSERT INTO public.accounts (user_id, balance, card_number, status)

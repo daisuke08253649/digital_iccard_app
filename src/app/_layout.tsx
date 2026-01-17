@@ -13,7 +13,7 @@ function RootLayoutNav() {
       return;
     }
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
 
     if (!session && !inAuthGroup) {
       // ログインしていない場合はログイン画面へ

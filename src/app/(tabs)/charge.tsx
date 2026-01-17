@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Card, Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -7,7 +7,10 @@ export default function ChargeScreen() {
 
   const handleCharge = (amount: number) => {
     // TODO: Phase 4でモックチャージ機能を実装
-    alert(`¥${amount.toLocaleString()}のチャージ機能は現在開発中です（Phase 4で実装予定）`);
+    Alert.alert(
+      'チャージ機能',
+      `¥${amount.toLocaleString()}のチャージ機能は現在開発中です（Phase 4で実装予定）`
+    );
   };
 
   return (
