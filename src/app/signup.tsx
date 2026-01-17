@@ -1,16 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, Surface } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useRef, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { TextInput, Button, Text, Surface } from "react-native-paper";
+import { useRouter } from "expo-router";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SignUpScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const { signUp } = useAuth();
   const router = useRouter();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -25,35 +31,35 @@ export default function SignUpScreen() {
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
-      setError('すべての項目を入力してください');
+      setError("すべての項目を入力してください");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('パスワードが一致しません');
+      setError("パスワードが一致しません");
       return;
     }
 
     if (password.length < 6) {
-      setError('パスワードは6文字以上で入力してください');
+      setError("パスワードは6文字以上で入力してください");
       return;
     }
 
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       await signUp(email, password);
-      setSuccess('登録が完了しました。確認メールをご確認ください。');
+      setSuccess("登録が完了しました。確認メールをご確認ください。");
       timeoutRef.current = setTimeout(() => {
-        router.replace('/login');
+        router.replace("/login");
       }, 2000);
     } catch (err) {
       if (err instanceof Error) {
-        setError('登録に失敗しました: ' + err.message);
+        setError("登録に失敗しました: " + err.message);
       } else {
-        setError('登録に失敗しました');
+        setError("登録に失敗しました");
       }
     } finally {
       setLoading(false);
@@ -61,13 +67,13 @@ export default function SignUpScreen() {
   };
 
   const handleBack = () => {
-    router.back();
+    router.replace("/login");
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Surface style={styles.surface} elevation={4}>
@@ -136,11 +142,11 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 16,
   },
   surface: {
@@ -148,13 +154,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   title: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 8,
-    color: '#d32f2f',
-    fontWeight: 'bold',
+    color: "#d32f2f",
+    fontWeight: "bold",
   },
   subtitle: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
   },
   input: {
@@ -164,13 +170,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   error: {
-    color: '#d32f2f',
+    color: "#d32f2f",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   success: {
-    color: '#388e3c',
+    color: "#388e3c",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
