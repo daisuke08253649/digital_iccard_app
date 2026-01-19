@@ -7,7 +7,6 @@
 ### 完了したフェーズ
 
 - [x] Phase 0: プロジェクト計画
-
   - [x] CLAUDE.md 作成
   - [x] requirements.md 作成
   - [x] design_spec.md 作成
@@ -15,27 +14,19 @@
   - [x] progress.md 作成（このファイル）
 
 - [x] Phase 1: 環境構築と初期セットアップ
-
   1.  **プロジェクトの初期化**
-
   - [x] Expo プロジェクトの作成 (`expo init`)
   - [x] Supabase プロジェクトの作成と初期設定
   - [x] Git リポジトリの作成と初期コミット
-
   2.  **基本技術スタックのセットアップ**
-
   - [x] React Native (Expo) 環境設定
   - [x] Supabase クライアントライブラリのインストールと設定 (`@supabase/supabase-js`)
   - [x] UI コンポーネントライブラリの選定と導入 (例: React Native Paper)
-
   3.  **認証機能の初期セットアップ**
-
   - [x] Supabase Authentication の基本設定（メール/パスワード）
 
 - [x] Phase 2: バックエンド (Supabase) の開発
-
   1.  **データベーススキーマの設計と実装**
-
   - [x] `users` テーブルの作成
   - [x] `accounts` テーブルの作成と `users` とのリレーション設定
   - [x] `payment_methods` テーブルの作成と `users` とのリレーション設定 (モック決済用に必要最低限の情報を保持)
@@ -43,36 +34,24 @@
   - [x] `commuter_passes` テーブルの作成と `accounts` とのリレーション設定
   - [x] `qr_tickets` テーブルの作成と `accounts` とのリレーション設定
   - [x] 各テーブルへのインデックス設定、制約（NOT NULL, UNIQUE）の定義
-
   2.  **Row Level Security (RLS) の設定**
-
   - [x] 各テーブルに対し、適切な RLS ポリシーを設定し、データアクセス権限を制御
 
 - [x] Phase 3: フロントエンド (React Native) の開発 - UI/UX と基本機能
-
   1.  **ナビゲーションの実装**
-
   - [x] Expo Routerを用いた画面遷移とタブナビゲーションの実装
   - [x] 認証フローの自動ナビゲーション
-
   2.  **認証 UI/UX の実装**
-
   - [x] ログイン、サインアップ画面の作成とSupabase Authenticationとの連携
   - [x] 認証コンテキスト（AuthContext）の実装
-
   3.  **メイン画面の UI/UX 実装**
-
   - [x] 残高表示コンポーネントの実装とSupabaseからのデータフェッチ
   - [x] 定期券情報表示コンポーネントの実装とデータフェッチ
   - [x] QRコード切符表示コンポーネントの実装と表示条件のロジック
-
   4.  **利用履歴機能の実装**
-
   - [x] 利用履歴一覧画面の作成
   - [x] Supabaseからのトランザクションデータフェッチと表示
-
   5.  **設定画面の基本実装**
-
   - [x] ユーザー情報表示、ログアウト機能
 
 ### 現在作業中のフェーズ
@@ -93,10 +72,10 @@
 - プロジェクト構造のセットアップ（src/components, hooks, services, contexts, types, utils, constants）
 - TypeScript型定義ファイル（src/types/database.ts）
 - 認証コンテキスト（src/contexts/AuthContext.tsx）
-- ルートレイアウト（src/app/_layout.tsx）による認証フローの自動ナビゲーション
+- ルートレイアウト（src/app/\_layout.tsx）による認証フローの自動ナビゲーション
 - ログイン画面（src/app/login.tsx）
 - サインアップ画面（src/app/signup.tsx）
-- タブナビゲーション（src/app/(tabs)/_layout.tsx）
+- タブナビゲーション（src/app/(tabs)/\_layout.tsx）
 - ホーム画面（src/app/(tabs)/index.tsx）
 - 利用履歴画面（src/app/(tabs)/history.tsx）
 - チャージ画面（src/app/(tabs)/charge.tsx - Phase 4実装予定の表示）
@@ -138,6 +117,7 @@
 **CodeRabbitの指摘と対応状況:**
 
 ✅ **7件の重大な指摘をすべて対応完了**
+
 1. 認証ルーティングの無限ループバグ → 修正完了
 2. @types/react-nativeの削除 → 削除完了
 3. Alert APIの修正 → 修正完了
@@ -147,6 +127,7 @@
 7. 未使用インポート削除 → 削除完了
 
 **コミット履歴:**
+
 - `96ea1c8` feat: Phase 3 UI/UX実装
 - `267c78f` fix: TypeScriptエラーの修正
 - `c84eac8` docs: Phase 3完了をprogress.mdに記録
@@ -154,9 +135,7 @@
 
 **次回やること:**
 
-1. feature/phase3-ui-uxブランチをdevelopにマージ
-2. developブランチの動作確認
-3. Phase 4: 決済機能の開発（モック実装）開始
+1. Phase 4: 決済機能の開発（モック実装）開始
    - チャージ機能のモック実装
    - 残高更新ロジック
    - トランザクション記録
@@ -182,12 +161,6 @@
 
 **CodeRabbit CLI の指摘:**
 Phase 2ではSQLマイグレーションファイルのみのため、チェック対象外
-
-**次回やること:**
-
-- Phase 3: フロントエンド (React Native) の開発開始
-- ナビゲーションの実装
-- 認証 UI/UX の実装
 
 ## 技術的な決定事項
 
@@ -238,3 +211,10 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 - 実際の金銭取引は行わない（モック実装）
 - CodeRabbit CLI と CodeRabbit を活用した 2 段階レビューフロー
 - セッション開始時は必ずこのファイルを確認すること
+
+## 注意
+
+- ブランチを切る際、ブランチの命名に気を付けること
+  └ NG: feature/phase3-ui-ux
+  └ OK: feature/auth, feature/tagなど
+  ※「phase」を含まない
