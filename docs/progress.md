@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-17 17:00
+最終更新: 2026-01-20 15:00
 
 ## 現在の状態
 
@@ -54,16 +54,79 @@
   5.  **設定画面の基本実装**
   - [x] ユーザー情報表示、ログアウト機能
 
+- [x] Phase 4: 決済機能の開発 **(モック実装)**
+  1.  **支払い方法管理機能の実装 (モック)**
+  - [x] 支払い方法の追加・削除 UI
+  - [x] Supabaseの`payment_methods`テーブルに仮想の支払い方法情報を保存
+  2.  **チャージ機能の実装 (モック)**
+  - [x] チャージ金額入力 UI
+  - [x] 内部的に残高を増加させるモックロジックを実装
+  - [x] Supabase `accounts` テーブルの残高更新ロジック
+  - [x] `transactions` テーブルへのチャージ履歴記録
+
 ### 現在作業中のフェーズ
 
-- [ ] Phase 4: 決済機能の開発 **(モック実装)** ← **次回ここから開始**
+- [ ] Phase 5: 定期券・QR コード切符機能の開発 ← **次回ここから開始**
 
 ### 次のフェーズ
 
-- [ ] Phase 5: 定期券・QR コード切符機能の開発
 - [ ] Phase 6: テストとデバッグ、学習/検証
 
 ## 最新の作業内容
+
+### 2026-01-20 セッション（Phase 4 完了）
+
+**実装したもの:**
+
+- 支払い方法サービスレイヤー（src/services/paymentMethodService.ts）
+  - getPaymentMethods: 支払い方法一覧取得
+  - getDefaultPaymentMethod: デフォルト支払い方法取得
+  - addPaymentMethod: 支払い方法追加
+  - deletePaymentMethod: 支払い方法削除
+  - setDefaultPaymentMethod: デフォルト設定
+  - getPaymentTypeDisplayName: 表示名取得ヘルパー
+- チャージ機能（src/services/accountService.ts に追加）
+  - executeCharge: モックチャージ実行
+  - executePayment: モック支払い実行（Phase 5用に準備）
+  - ChargeResult型定義
+- 支払い方法管理画面（src/app/payment-methods.tsx）
+  - 支払い方法一覧表示
+  - モーダルによる新規追加UI
+  - 削除機能（確認ダイアログ付き）
+  - デフォルト設定機能
+- チャージ画面の完全実装（src/app/(tabs)/charge.tsx を更新）
+  - 現在の残高表示
+  - 支払い方法選択・変更
+  - チャージ実行（1000〜10000円の選択肢）
+  - バリデーション（上限チェック含む）
+
+**技術的な特徴:**
+
+- 金額バリデーション
+  - 1回のチャージ上限: 50,000円
+  - 残高上限: 200,000円
+- トランザクション記録
+  - type: 'demo_charge' でデモチャージとして記録
+  - 支払い時は 'demo_purchase' として記録
+- useFocusEffectを使用して画面フォーカス時にデータを再取得
+
+**ブランチ戦略:**
+
+- `feature/payment-charge`ブランチを`develop`から作成
+- TypeScriptコンパイルエラーなし
+
+**コミット履歴:**
+
+- `38b89f0` feat: Phase 4 - 決済機能のモック実装
+
+**次回やること:**
+
+1. PR作成してCodeRabbitレビューを受ける
+2. Phase 5: 定期券・QRコード切符機能の開発開始
+   - 定期券の発行・管理機能
+   - QRコード切符の発券・利用機能
+
+---
 
 ### 2026-01-17 セッション（Phase 3 完了 + CodeRabbit対応完了）
 
@@ -190,10 +253,10 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 
 ## ブランチ情報
 
-- 現在のブランチ: `feature/phase3-ui-ux`
+- 現在のブランチ: `feature/payment-charge`
 - `main`ブランチ: 安定版（Phase 2まで完了）
-- `develop`ブランチ: 開発用メインブランチ（作成済み）
-- `feature/phase3-ui-ux`: Phase 3実装ブランチ（PR作成済み）
+- `develop`ブランチ: 開発用メインブランチ（Phase 3まで完了）
+- `feature/payment-charge`: Phase 4実装ブランチ（PR作成予定）
 
 ## 重要なファイル
 
