@@ -96,9 +96,10 @@ export default function ChargeScreen() {
               );
 
               if (result.success) {
+                const warning = result.error ? `\n\n※${result.error}` : '';
                 Alert.alert(
                   'チャージ完了',
-                  `¥${amount.toLocaleString()}をチャージしました\n新しい残高: ¥${result.newBalance?.toLocaleString()}`
+                  `¥${amount.toLocaleString()}をチャージしました\n新しい残高: ¥${result.newBalance?.toLocaleString()}${warning}`
                 );
                 // アカウント情報を更新
                 if (user) {

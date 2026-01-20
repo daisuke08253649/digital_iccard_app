@@ -66,7 +66,11 @@ export default function PaymentMethodsScreen() {
   }, [loadPaymentMethods]);
 
   const handleAddPaymentMethod = async () => {
-    if (!user || !displayName.trim()) {
+    if (!user) {
+      Alert.alert('エラー', 'ログインが必要です');
+      return;
+    }
+    if (!displayName.trim()) {
       Alert.alert('エラー', '表示名を入力してください');
       return;
     }
