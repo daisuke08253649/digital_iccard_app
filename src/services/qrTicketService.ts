@@ -16,10 +16,12 @@ export interface IssueQRTicketResult {
  * 実際のシステムでは区間・路線に基づいた運賃計算が必要
  */
 export function calculateFare(startStation: string, endStation: string): number {
-  // モック運賃: 固定200円 + ランダム要素
+  // モック運賃: 駅名の組み合わせに基づく決定論的な計算
   // 実際には区間距離などに基づいて計算
   const baseFare = 200;
-  const additionalFare = Math.floor(Math.random() * 5) * 50; // 0〜200円追加
+  // 駅名のハッシュ値を使用して一貫性のある追加運賃を計算
+  const hash = (startStation + endStation).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const additionalFare = (hash % 5) * 50; // 0〜200円追加
   return baseFare + additionalFare;
 }
 
@@ -97,10 +99,13 @@ export async function issueQRTicket(
   if (ticketError) {
     console.error('Error creating QR ticket:', ticketError);
     // 残高を戻す（ロールバック）
-    await supabase
+    const { error: rollbackError } = await supabase
       .from('accounts')
       .update({ balance: account.balance })
       .eq('id', accountId);
+    if (rollbackError) {
+      console.error('Critical: Failed to rollback balance:', rollbackError);
+    }
     return { success: false, error: 'QRチケットの発券に失敗しました' };
   }
 
@@ -131,14 +136,21 @@ export async function issueQRTicket(
  * QRチケットを使用済みにする
  */
 export async function useQRTicket(ticketId: string): Promise<boolean> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('qr_tickets')
     .update({ status: 'used' })
     .eq('id', ticketId)
-    .eq('status', 'issued'); // 発券済みのチケットのみ使用可能
+    .eq('status', 'issued') // 発券済みのチケットのみ使用可能
+    .select('id');
 
   if (error) {
     console.error('Error using QR ticket:', error);
+    return false;
+  }
+
+  // 更新された行がない場合（チケットが存在しないか、既に使用済み）
+  if (!data || data.length === 0) {
+    console.error('No ticket was updated: ticket not found or already used');
     return false;
   }
 

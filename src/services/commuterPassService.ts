@@ -119,10 +119,13 @@ export async function purchaseCommuterPass(
   if (passError) {
     console.error('Error creating commuter pass:', passError);
     // 残高を戻す（ロールバック）
-    await supabase
+    const { error: rollbackError } = await supabase
       .from('accounts')
       .update({ balance: account.balance })
       .eq('id', accountId);
+    if (rollbackError) {
+      console.error('Critical: Failed to rollback balance:', rollbackError);
+    }
     return { success: false, error: '定期券の作成に失敗しました' };
   }
 
