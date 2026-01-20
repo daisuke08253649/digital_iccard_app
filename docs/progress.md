@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-20 15:00
+最終更新: 2026-01-20 16:30
 
 ## 現在の状態
 
@@ -113,18 +113,34 @@
 **ブランチ戦略:**
 
 - `feature/payment-charge`ブランチを`develop`から作成
-- TypeScriptコンパイルエラーなし
+- PR #2 作成: https://github.com/daisuke08253649/digital_iccard_app/pull/2
+- CodeRabbitレビュー対応後、developにマージ完了
+
+**CodeRabbitの指摘と対応（計14件）:**
+
+| 回 | 指摘数 | 主な内容 |
+|----|--------|----------|
+| 1回目 | 5件 | .coderabbit.yaml設定修正、ローディング解除、エラーハンドリング追加 |
+| 2回目 | 4件 | try/finally追加（例外時のフラグ解除保証） |
+| 3回目 | 2件 | エラーメッセージ改善（成功時警告表示、ログイン/入力必須分離） |
+| 4回目 | 3件 | ログアウト後の情報クリア、nullチェック強化 |
 
 **コミット履歴:**
 
 - `38b89f0` feat: Phase 4 - 決済機能のモック実装
+- `75cf9f2` docs: Phase 4完了をprogress.mdに記録
+- `21cca03` fix: CodeRabbit設定を修正
+- `56f8112` fix: CodeRabbitの指摘に対応
+- `ac2eb04` fix: 非同期処理の例外時にフラグが解除されない問題を修正
+- `2611602` fix: CodeRabbitの指摘に対応（エラーメッセージ改善）
+- `b9f44d3` fix: ログアウト後の情報露出とnullチェックを修正
 
 **次回やること:**
 
-1. PR作成してCodeRabbitレビューを受ける
-2. Phase 5: 定期券・QRコード切符機能の開発開始
+1. Phase 5: 定期券・QRコード切符機能の開発開始
    - 定期券の発行・管理機能
    - QRコード切符の発券・利用機能
+   - NFC機能の実験的実装（オプション）
 
 ---
 
@@ -253,10 +269,10 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 
 ## ブランチ情報
 
-- 現在のブランチ: `feature/payment-charge`
+- 現在のブランチ: `develop`
 - `main`ブランチ: 安定版（Phase 2まで完了）
-- `develop`ブランチ: 開発用メインブランチ（Phase 3まで完了）
-- `feature/payment-charge`: Phase 4実装ブランチ（PR作成予定）
+- `develop`ブランチ: 開発用メインブランチ（Phase 4まで完了）
+- `feature/payment-charge`: Phase 4実装ブランチ（マージ済み）
 
 ## 重要なファイル
 
