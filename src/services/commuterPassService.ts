@@ -160,11 +160,12 @@ export async function cancelCommuterPass(
   passId: string,
   accountId: string
 ): Promise<{ success: boolean; refundAmount?: number; error?: string }> {
-  // 定期券情報を取得
+  // 定期券情報を取得（所有権の検証を含む）
   const { data: pass, error: fetchError } = await supabase
     .from('commuter_passes')
     .select('*')
     .eq('id', passId)
+    .eq('account_id', accountId)
     .eq('status', 'active')
     .single();
 
@@ -172,11 +173,12 @@ export async function cancelCommuterPass(
     return { success: false, error: 'キャンセル可能な定期券が見つかりません' };
   }
 
-  // 定期券をキャンセル
+  // 定期券をキャンセル（所有権の検証を含む）
   const { error } = await supabase
     .from('commuter_passes')
     .update({ status: 'canceled' })
-    .eq('id', passId);
+    .eq('id', passId)
+    .eq('account_id', accountId);
 
   if (error) {
     console.error('Error canceling commuter pass:', error);

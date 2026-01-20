@@ -164,11 +164,12 @@ export async function cancelQRTicket(
   ticketId: string,
   accountId: string
 ): Promise<{ success: boolean; refundAmount?: number; error?: string }> {
-  // チケット情報を取得
+  // チケット情報を取得（所有権の検証を含む）
   const { data: ticket, error: fetchError } = await supabase
     .from('qr_tickets')
     .select('*')
     .eq('id', ticketId)
+    .eq('account_id', accountId)
     .eq('status', 'issued')
     .single();
 
@@ -176,11 +177,12 @@ export async function cancelQRTicket(
     return { success: false, error: 'キャンセル可能なチケットが見つかりません' };
   }
 
-  // チケットをキャンセル
+  // チケットをキャンセル（所有権の検証を含む）
   const { error: cancelError } = await supabase
     .from('qr_tickets')
     .update({ status: 'canceled' })
-    .eq('id', ticketId);
+    .eq('id', ticketId)
+    .eq('account_id', accountId);
 
   if (cancelError) {
     return { success: false, error: 'チケットのキャンセルに失敗しました' };
