@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-20 18:00
+最終更新: 2026-01-20 19:00
 
 ## 現在の状態
 
@@ -64,9 +64,22 @@
   - [x] Supabase `accounts` テーブルの残高更新ロジック
   - [x] `transactions` テーブルへのチャージ履歴記録
 
+- [x] Phase 5: 定期券・QR コード切符機能の開発
+  1.  **定期券機能の実装**
+  - [x] 定期券購入画面（区間・期間選択UI）
+  - [x] 定期券サービスレイヤー（購入・キャンセル・一覧取得）
+  - [x] 価格計算（1ヶ月/3ヶ月/6ヶ月、割引適用）
+  2.  **QRコード切符機能の実装**
+  - [x] QRチケット発券画面（区間選択UI）
+  - [x] QRチケットサービスレイヤー（発券・使用・キャンセル）
+  - [x] QRコード表示（react-native-qrcode-svg）
+  3.  **ホーム画面の拡張**
+  - [x] クイックアクションボタン（定期券購入・QRチケット発券へのナビゲーション）
+  - [x] 定期券・QRチケット情報の表示
+
 ### 現在作業中のフェーズ
 
-- [ ] Phase 5: 定期券・QR コード切符機能の開発 ← **PR作成完了、CodeRabbitレビュー待ち**
+なし（Phase 5まで完了）
 
 ### 次のフェーズ
 
@@ -74,24 +87,24 @@
 
 ## 最新の作業内容
 
-### 2026-01-20 セッション（Phase 5 実装中）
+### 2026-01-20 セッション（Phase 5 完了）
 
 **実装したもの:**
 
 - 定期券サービスレイヤー（src/services/commuterPassService.ts）
   - purchaseCommuterPass: 定期券購入（残高減算、トランザクション記録）
-  - cancelCommuterPass: 定期券キャンセル
+  - cancelCommuterPass: 定期券キャンセル（払い戻し、所有権検証付き）
   - getCommuterPasses: 定期券一覧取得
   - calculatePassPrice: 価格計算（1ヶ月/3ヶ月/6ヶ月、割引適用）
   - SAMPLE_STATIONS: デモ用駅一覧
   - DURATION_LABELS: 期間表示ラベル
 - QRチケットサービスレイヤー（src/services/qrTicketService.ts）
   - issueQRTicket: QRチケット発券（運賃計算、残高減算）
-  - useQRTicket: チケット使用処理
-  - cancelQRTicket: チケットキャンセル（払い戻し）
+  - useQRTicket: チケット使用処理（更新件数検証付き）
+  - cancelQRTicket: チケットキャンセル（払い戻し、所有権検証付き）
   - getQRTickets: チケット一覧取得
   - generateQRCodeData: QRコード用データ生成
-  - calculateFare: 運賃計算
+  - calculateFare: 運賃計算（決定論的ハッシュベース）
 - 定期券購入画面（src/app/commuter-pass.tsx）
   - 駅選択（Picker）
   - 期間選択（RadioButton）
@@ -113,13 +126,20 @@
 
 - `feature/commuter-pass-qr`ブランチを`develop`から作成
 - PR #3 作成: https://github.com/daisuke08253649/digital_iccard_app/pull/3
-- CodeRabbitレビュー待ち
+- CodeRabbitレビュー対応後、developにマージ完了
+
+**CodeRabbitの指摘と対応（計7件）:**
+
+| 回 | 指摘数 | 主な内容 |
+|----|--------|----------|
+| 1回目 | 3件 | calculateFare決定論化、useQRTicket更新件数検証、ロールバックエラーログ追加 |
+| 2回目 | 3件 | レースコンディション警告（モックでは許容）、cancelCommuterPass払い戻し追加、cancelQRTicketフォールバックエラー処理 |
+| 3回目 | 1件 | cancelCommuterPass/cancelQRTicketに所有権検証追加（セキュリティ修正） |
 
 **次回やること:**
 
-1. CodeRabbitレビュー指摘への対応
-2. PRをdevelopにマージ
-3. Phase 6（テストとデバッグ）の検討
+1. Phase 6（テストとデバッグ）の検討
+2. NFC機能の実験的実装（オプション）
 
 ---
 
@@ -318,11 +338,11 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 
 ## ブランチ情報
 
-- 現在のブランチ: `feature/commuter-pass-qr`
+- 現在のブランチ: `develop`
 - `main`ブランチ: 安定版（Phase 2まで完了）
-- `develop`ブランチ: 開発用メインブランチ（Phase 4まで完了）
+- `develop`ブランチ: 開発用メインブランチ（Phase 5まで完了）
 - `feature/payment-charge`: Phase 4実装ブランチ（マージ済み）
-- `feature/commuter-pass-qr`: Phase 5実装ブランチ（PR #3 レビュー待ち）
+- `feature/commuter-pass-qr`: Phase 5実装ブランチ（マージ済み）
 
 ## 重要なファイル
 
