@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-20 19:00
+最終更新: 2026-01-20 20:30
 
 ## 現在の状態
 
@@ -91,55 +91,95 @@
 
 **実装したもの:**
 
-- 定期券サービスレイヤー（src/services/commuterPassService.ts）
-  - purchaseCommuterPass: 定期券購入（残高減算、トランザクション記録）
-  - cancelCommuterPass: 定期券キャンセル（払い戻し、所有権検証付き）
-  - getCommuterPasses: 定期券一覧取得
-  - calculatePassPrice: 価格計算（1ヶ月/3ヶ月/6ヶ月、割引適用）
-  - SAMPLE_STATIONS: デモ用駅一覧
-  - DURATION_LABELS: 期間表示ラベル
-- QRチケットサービスレイヤー（src/services/qrTicketService.ts）
-  - issueQRTicket: QRチケット発券（運賃計算、残高減算）
-  - useQRTicket: チケット使用処理（更新件数検証付き）
-  - cancelQRTicket: チケットキャンセル（払い戻し、所有権検証付き）
-  - getQRTickets: チケット一覧取得
-  - generateQRCodeData: QRコード用データ生成
-  - calculateFare: 運賃計算（決定論的ハッシュベース）
-- 定期券購入画面（src/app/commuter-pass.tsx）
-  - 駅選択（Picker）
-  - 期間選択（RadioButton）
-  - 価格確認・購入フロー
-- QRチケット発券画面（src/app/qr-ticket.tsx）
-  - 駅選択（Picker）
-  - 運賃表示・発券フロー
-- ホーム画面の拡張（src/app/(tabs)/index.tsx）
-  - クイックアクションボタン（定期券購入、QRチケット発券）
-  - 定期券情報表示
-  - QRチケットのQRコード表示（react-native-qrcode-svg）
+1. **定期券サービスレイヤー（src/services/commuterPassService.ts）**
+   - `purchaseCommuterPass`: 定期券購入（残高減算、トランザクション記録、ロールバック対応）
+   - `cancelCommuterPass`: 定期券キャンセル（払い戻し、所有権検証付き）
+   - `getCommuterPasses`: 定期券一覧取得
+   - `calculatePassPrice`: 価格計算（1ヶ月/3ヶ月/6ヶ月、割引適用）
+   - `SAMPLE_STATIONS`: デモ用駅一覧（東京、新宿、渋谷など10駅）
+   - `DURATION_LABELS`: 期間表示ラベル
+
+2. **QRチケットサービスレイヤー（src/services/qrTicketService.ts）**
+   - `issueQRTicket`: QRチケット発券（運賃計算、残高減算、ロールバック対応）
+   - `useQRTicket`: チケット使用処理（更新件数検証付き）
+   - `cancelQRTicket`: チケットキャンセル（払い戻し、所有権検証付き）
+   - `getQRTickets`: チケット一覧取得
+   - `generateQRCodeData`: QRコード用データ生成（JSON形式）
+   - `calculateFare`: 運賃計算（決定論的ハッシュベース）
+
+3. **定期券購入画面（src/app/commuter-pass.tsx）**
+   - 駅選択（Picker）
+   - 期間選択（RadioButton: 1ヶ月/3ヶ月/6ヶ月）
+   - 価格確認・購入フロー
+   - デモモード表示、残高表示
+
+4. **QRチケット発券画面（src/app/qr-ticket.tsx）**
+   - 駅選択（Picker）
+   - 運賃表示・発券フロー
+   - 注意事項表示（当日有効、再利用不可など）
+
+5. **ホーム画面の拡張（src/app/(tabs)/index.tsx）**
+   - クイックアクションボタン（定期券購入、QRチケット発券へのナビゲーション）
+   - 定期券情報のカード表示（区間、有効期限）
+   - QRチケットのQRコード表示（react-native-qrcode-svg）
 
 **追加した依存関係:**
 
-- `@react-native-picker/picker`: 駅選択用Picker
-- `react-native-qrcode-svg`: QRコード表示
+- `@react-native-picker/picker` (v2.11.4): 駅選択用Pickerコンポーネント
+- `react-native-qrcode-svg` (v6.3.21): QRコード表示
+- `react-native-svg` (v15.15.1): QRコードの依存関係
+
+**発生した問題と解決方法:**
+
+1. **運賃計算のランダム性問題**
+   - 問題: `calculateFare`でMath.random()を使用 → 表示金額と実際の請求額が異なる可能性
+   - 解決: 駅名のハッシュ値を使用した決定論的計算に変更
+
+2. **更新結果の検証不足**
+   - 問題: `useQRTicket`でSupabase updateがエラーなしでも0件更新の可能性
+   - 解決: `.select('id')`を追加し、`data.length === 0`の場合`false`を返すよう修正
+
+3. **キャンセル時の払い戻し欠如**
+   - 問題: `cancelCommuterPass`がステータス変更のみで払い戻し処理なし
+   - 解決: `cancelQRTicket`と同様の払い戻しロジックを追加
+
+4. **フォールバック時のエラーハンドリング不足**
+   - 問題: `cancelQRTicket`のRPCフォールバックで直接更新の結果未検証
+   - 解決: `updateError`をチェックし、失敗時にエラーメッセージを返すよう修正
+
+5. **所有権検証の欠如（セキュリティ脆弱性）**
+   - 問題: `cancelCommuterPass`/`cancelQRTicket`でpassId/ticketIdのみで検索 → 他人の定期券/チケットをキャンセルして自分に返金可能
+   - 解決: 取得・更新クエリに`.eq('account_id', accountId)`を追加して所有権を検証
 
 **ブランチ戦略:**
 
 - `feature/commuter-pass-qr`ブランチを`develop`から作成
 - PR #3 作成: https://github.com/daisuke08253649/digital_iccard_app/pull/3
-- CodeRabbitレビュー対応後、developにマージ完了
+- CodeRabbitレビュー3回対応後、developにマージ完了
 
 **CodeRabbitの指摘と対応（計7件）:**
 
-| 回 | 指摘数 | 主な内容 |
-|----|--------|----------|
-| 1回目 | 3件 | calculateFare決定論化、useQRTicket更新件数検証、ロールバックエラーログ追加 |
-| 2回目 | 3件 | レースコンディション警告（モックでは許容）、cancelCommuterPass払い戻し追加、cancelQRTicketフォールバックエラー処理 |
-| 3回目 | 1件 | cancelCommuterPass/cancelQRTicketに所有権検証追加（セキュリティ修正） |
+| 回 | 指摘数 | 重大度 | 主な内容 | 対応状況 |
+|----|--------|--------|----------|----------|
+| 1回目 | 3件 | Major | calculateFare決定論化、useQRTicket更新件数検証、ロールバックエラーログ追加 | ✅ 対応完了 |
+| 2回目 | 3件 | Major | レースコンディション警告（モックでは許容）、cancelCommuterPass払い戻し追加、cancelQRTicketフォールバックエラー処理 | ✅ 対応完了 |
+| 3回目 | 1件 | Critical | cancelCommuterPass/cancelQRTicketに所有権検証追加（セキュリティ修正） | ✅ 対応完了 |
+
+**コミット履歴:**
+
+- `36f91ec` feat: 定期券購入・QRチケット発券機能を実装
+- `269a0d0` docs: Phase 5の進捗を記録
+- `e9541d0` fix: CodeRabbitの指摘に対応（calculateFare決定論化、useQRTicket検証、ログ追加）
+- `5c9f99d` fix: CodeRabbitの指摘に対応（第2回 - 払い戻し、フォールバック処理）
+- `b4afee8` fix: キャンセル処理に所有権検証を追加（セキュリティ修正）
 
 **次回やること:**
 
-1. Phase 6（テストとデバッグ）の検討
+1. Phase 6（テストとデバッグ）の開始
+   - 単体テストの作成（Jest）
+   - E2Eテストの検討（Detox/Appium）
 2. NFC機能の実験的実装（オプション）
+3. mainブランチへのマージ検討
 
 ---
 
