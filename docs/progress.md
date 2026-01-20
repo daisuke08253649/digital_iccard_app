@@ -1,6 +1,6 @@
 # プロジェクト進捗管理
 
-最終更新: 2026-01-20 16:30
+最終更新: 2026-01-20 18:00
 
 ## 現在の状態
 
@@ -66,13 +66,62 @@
 
 ### 現在作業中のフェーズ
 
-- [ ] Phase 5: 定期券・QR コード切符機能の開発 ← **次回ここから開始**
+- [ ] Phase 5: 定期券・QR コード切符機能の開発 ← **PR作成完了、CodeRabbitレビュー待ち**
 
 ### 次のフェーズ
 
 - [ ] Phase 6: テストとデバッグ、学習/検証
 
 ## 最新の作業内容
+
+### 2026-01-20 セッション（Phase 5 実装中）
+
+**実装したもの:**
+
+- 定期券サービスレイヤー（src/services/commuterPassService.ts）
+  - purchaseCommuterPass: 定期券購入（残高減算、トランザクション記録）
+  - cancelCommuterPass: 定期券キャンセル
+  - getCommuterPasses: 定期券一覧取得
+  - calculatePassPrice: 価格計算（1ヶ月/3ヶ月/6ヶ月、割引適用）
+  - SAMPLE_STATIONS: デモ用駅一覧
+  - DURATION_LABELS: 期間表示ラベル
+- QRチケットサービスレイヤー（src/services/qrTicketService.ts）
+  - issueQRTicket: QRチケット発券（運賃計算、残高減算）
+  - useQRTicket: チケット使用処理
+  - cancelQRTicket: チケットキャンセル（払い戻し）
+  - getQRTickets: チケット一覧取得
+  - generateQRCodeData: QRコード用データ生成
+  - calculateFare: 運賃計算
+- 定期券購入画面（src/app/commuter-pass.tsx）
+  - 駅選択（Picker）
+  - 期間選択（RadioButton）
+  - 価格確認・購入フロー
+- QRチケット発券画面（src/app/qr-ticket.tsx）
+  - 駅選択（Picker）
+  - 運賃表示・発券フロー
+- ホーム画面の拡張（src/app/(tabs)/index.tsx）
+  - クイックアクションボタン（定期券購入、QRチケット発券）
+  - 定期券情報表示
+  - QRチケットのQRコード表示（react-native-qrcode-svg）
+
+**追加した依存関係:**
+
+- `@react-native-picker/picker`: 駅選択用Picker
+- `react-native-qrcode-svg`: QRコード表示
+
+**ブランチ戦略:**
+
+- `feature/commuter-pass-qr`ブランチを`develop`から作成
+- PR #3 作成: https://github.com/daisuke08253649/digital_iccard_app/pull/3
+- CodeRabbitレビュー待ち
+
+**次回やること:**
+
+1. CodeRabbitレビュー指摘への対応
+2. PRをdevelopにマージ
+3. Phase 6（テストとデバッグ）の検討
+
+---
 
 ### 2026-01-20 セッション（Phase 4 完了）
 
@@ -269,10 +318,11 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 
 ## ブランチ情報
 
-- 現在のブランチ: `develop`
+- 現在のブランチ: `feature/commuter-pass-qr`
 - `main`ブランチ: 安定版（Phase 2まで完了）
 - `develop`ブランチ: 開発用メインブランチ（Phase 4まで完了）
 - `feature/payment-charge`: Phase 4実装ブランチ（マージ済み）
+- `feature/commuter-pass-qr`: Phase 5実装ブランチ（PR #3 レビュー待ち）
 
 ## 重要なファイル
 

@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, Text, ActivityIndicator, Chip } from 'react-native-paper';
+import { Card, Text, ActivityIndicator, Chip, Button } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   getAccount,
   getActiveCommuterPasses,
   getActiveQRTickets,
 } from '../../services/accountService';
+import { generateQRCodeData } from '../../services/qrTicketService';
 import { Account, CommuterPass, QRTicket } from '../../types/database';
 
 export default function HomeScreen() {
@@ -17,8 +21,13 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) {
+      setAccount(null);
+      setCommuterPasses([]);
+      setQRTickets([]);
+      setLoading(false);
+      setRefreshing(false);
       return;
     }
 
@@ -41,11 +50,13 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    loadData();
   }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -88,6 +99,28 @@ export default function HomeScreen() {
         </Card.Content>
       </Card>
 
+      {/* クイックアクション */}
+      <View style={styles.quickActions}>
+        <Button
+          mode="contained"
+          icon="train"
+          onPress={() => router.push('/commuter-pass')}
+          style={styles.actionButton}
+          contentStyle={styles.actionButtonContent}
+        >
+          定期券購入
+        </Button>
+        <Button
+          mode="contained"
+          icon="qrcode"
+          onPress={() => router.push('/qr-ticket')}
+          style={[styles.actionButton, styles.actionButtonSecondary]}
+          contentStyle={styles.actionButtonContent}
+        >
+          QRチケット
+        </Button>
+      </View>
+
       {/* 定期券情報 */}
       {commuterPasses.length > 0 && (
         <View style={styles.section}>
@@ -97,6 +130,7 @@ export default function HomeScreen() {
           {commuterPasses.map((pass) => (
             <Card key={pass.id} style={styles.card}>
               <Card.Content style={styles.cardContentCenter}>
+                <MaterialCommunityIcons name="train" size={32} color="#d32f2f" />
                 <Text variant="titleMedium" style={styles.routeName}>
                   {pass.route_name || '定期券'}
                 </Text>
@@ -109,7 +143,7 @@ export default function HomeScreen() {
                     {new Date(pass.end_date).toLocaleDateString('ja-JP')}
                   </Text>
                 </View>
-                <Chip mode="outlined" style={styles.statusChip}>
+                <Chip mode="outlined" style={styles.statusChip} textStyle={styles.statusChipText}>
                   有効期限中
                 </Chip>
               </Card.Content>
@@ -125,20 +159,28 @@ export default function HomeScreen() {
             QRコード切符
           </Text>
           {qrTickets.map((ticket) => (
-            <Card key={ticket.id} style={styles.card}>
-              <Card.Content>
-                <Text variant="titleMedium">
-                  {ticket.start_station} → {ticket.end_station}
-                </Text>
-                <Text variant="bodyMedium" style={styles.fareText}>
-                  運賃: ¥{ticket.fare.toLocaleString()}
-                </Text>
-                <Text variant="bodySmall" style={styles.dateText}>
-                  有効期限: {new Date(ticket.expiry_date).toLocaleString('ja-JP')}
-                </Text>
-                <View style={styles.qrPlaceholder}>
-                  <Text>QRコード表示予定</Text>
-                  <Text variant="bodySmall">コード: {ticket.ticket_code}</Text>
+            <Card key={ticket.id} style={styles.qrCard}>
+              <Card.Content style={styles.qrCardContent}>
+                <View style={styles.qrInfo}>
+                  <Text variant="titleMedium" style={styles.qrRoute}>
+                    {ticket.start_station} → {ticket.end_station}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.fareText}>
+                    運賃: ¥{ticket.fare.toLocaleString()}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.dateText}>
+                    有効期限: {new Date(ticket.expiry_date).toLocaleString('ja-JP')}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.ticketCode}>
+                    コード: {ticket.ticket_code}
+                  </Text>
+                </View>
+                <View style={styles.qrCodeContainer}>
+                  <QRCode
+                    value={generateQRCodeData(ticket)}
+                    size={120}
+                    backgroundColor="#fff"
+                  />
                 </View>
               </Card.Content>
             </Card>
@@ -146,12 +188,19 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* 空の状態 */}
       {commuterPasses.length === 0 && qrTickets.length === 0 && (
-        <View style={styles.emptyState}>
-          <Text variant="bodyLarge" style={styles.emptyText}>
-            定期券やQRコード切符はありません
-          </Text>
-        </View>
+        <Card style={styles.emptyCard}>
+          <Card.Content style={styles.emptyContent}>
+            <MaterialCommunityIcons name="ticket-outline" size={64} color="#ccc" />
+            <Text variant="bodyLarge" style={styles.emptyText}>
+              定期券やQRコード切符はありません
+            </Text>
+            <Text variant="bodySmall" style={styles.emptySubText}>
+              上のボタンから購入・発券できます
+            </Text>
+          </Card.Content>
+        </Card>
       )}
     </ScrollView>
   );
@@ -186,6 +235,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.8,
   },
+  quickActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: '#d32f2f',
+  },
+  actionButtonSecondary: {
+    backgroundColor: '#1976d2',
+  },
+  actionButtonContent: {
+    paddingVertical: 4,
+  },
   section: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -199,9 +264,11 @@ const styles = StyleSheet.create({
   },
   cardContentCenter: {
     alignItems: 'center',
+    paddingVertical: 16,
   },
   routeName: {
     fontWeight: 'bold',
+    marginTop: 8,
     marginBottom: 4,
   },
   stationInfo: {
@@ -215,22 +282,51 @@ const styles = StyleSheet.create({
   },
   statusChip: {
     marginTop: 8,
+    backgroundColor: '#e8f5e9',
+  },
+  statusChipText: {
+    color: '#2e7d32',
+  },
+  qrCard: {
+    marginBottom: 12,
+  },
+  qrCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  qrInfo: {
+    flex: 1,
+  },
+  qrRoute: {
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   fareText: {
     marginVertical: 4,
   },
-  qrPlaceholder: {
-    marginTop: 12,
-    padding: 16,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    alignItems: 'center',
+  ticketCode: {
+    color: '#666',
+    fontFamily: 'monospace',
   },
-  emptyState: {
-    padding: 32,
+  qrCodeContainer: {
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+  },
+  emptyCard: {
+    margin: 16,
+  },
+  emptyContent: {
     alignItems: 'center',
+    paddingVertical: 32,
   },
   emptyText: {
+    marginTop: 16,
     color: '#666',
+  },
+  emptySubText: {
+    marginTop: 8,
+    color: '#999',
   },
 });
