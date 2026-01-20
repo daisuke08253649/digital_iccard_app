@@ -50,9 +50,15 @@ export default function PaymentMethodsScreen() {
       return;
     }
     setLoading(true);
-    const methods = await getPaymentMethods(user.id);
-    setPaymentMethods(methods);
-    setLoading(false);
+    try {
+      const methods = await getPaymentMethods(user.id);
+      setPaymentMethods(methods);
+    } catch (e) {
+      console.error('Error loading payment methods:', e);
+      Alert.alert('エラー', '支払い方法の取得に失敗しました');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -66,23 +72,29 @@ export default function PaymentMethodsScreen() {
     }
 
     setSaving(true);
-    const result = await addPaymentMethod(
-      user.id,
-      selectedType,
-      displayName.trim(),
-      isDefault || paymentMethods.length === 0
-    );
-    setSaving(false);
+    try {
+      const result = await addPaymentMethod(
+        user.id,
+        selectedType,
+        displayName.trim(),
+        isDefault || paymentMethods.length === 0
+      );
 
-    if (result) {
-      setModalVisible(false);
-      setDisplayName('');
-      setSelectedType('credit_card');
-      setIsDefault(false);
-      await loadPaymentMethods();
-      Alert.alert('完了', '支払い方法を追加しました');
-    } else {
+      if (result) {
+        setModalVisible(false);
+        setDisplayName('');
+        setSelectedType('credit_card');
+        setIsDefault(false);
+        await loadPaymentMethods();
+        Alert.alert('完了', '支払い方法を追加しました');
+      } else {
+        Alert.alert('エラー', '支払い方法の追加に失敗しました');
+      }
+    } catch (e) {
+      console.error('Error adding payment method:', e);
       Alert.alert('エラー', '支払い方法の追加に失敗しました');
+    } finally {
+      setSaving(false);
     }
   };
 

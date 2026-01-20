@@ -34,16 +34,22 @@ export default function ChargeScreen() {
     }
     setLoading(true);
 
-    const [accountData, methodsData, defaultMethod] = await Promise.all([
-      getAccount(user.id),
-      getPaymentMethods(user.id),
-      getDefaultPaymentMethod(user.id),
-    ]);
+    try {
+      const [accountData, methodsData, defaultMethod] = await Promise.all([
+        getAccount(user.id),
+        getPaymentMethods(user.id),
+        getDefaultPaymentMethod(user.id),
+      ]);
 
-    setAccount(accountData);
-    setPaymentMethods(methodsData);
-    setSelectedPaymentMethod(defaultMethod);
-    setLoading(false);
+      setAccount(accountData);
+      setPaymentMethods(methodsData);
+      setSelectedPaymentMethod(defaultMethod);
+    } catch (e) {
+      console.error('Error loading charge data:', e);
+      Alert.alert('エラー', 'データの取得に失敗しました');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useFocusEffect(
@@ -82,23 +88,31 @@ export default function ChargeScreen() {
           text: 'チャージする',
           onPress: async () => {
             setCharging(true);
-            const result = await executeCharge(
-              account.id,
-              amount,
-              selectedPaymentMethod.id
-            );
-            setCharging(false);
-
-            if (result.success) {
-              Alert.alert(
-                'チャージ完了',
-                `¥${amount.toLocaleString()}をチャージしました\n新しい残高: ¥${result.newBalance?.toLocaleString()}`
+            try {
+              const result = await executeCharge(
+                account.id,
+                amount,
+                selectedPaymentMethod.id
               );
-              // アカウント情報を更新
-              const updatedAccount = await getAccount(user!.id);
-              setAccount(updatedAccount);
-            } else {
-              Alert.alert('エラー', result.error || 'チャージに失敗しました');
+
+              if (result.success) {
+                Alert.alert(
+                  'チャージ完了',
+                  `¥${amount.toLocaleString()}をチャージしました\n新しい残高: ¥${result.newBalance?.toLocaleString()}`
+                );
+                // アカウント情報を更新
+                if (user) {
+                  const updatedAccount = await getAccount(user.id);
+                  setAccount(updatedAccount);
+                }
+              } else {
+                Alert.alert('エラー', result.error || 'チャージに失敗しました');
+              }
+            } catch (e) {
+              console.error('Error during charge:', e);
+              Alert.alert('エラー', 'チャージに失敗しました');
+            } finally {
+              setCharging(false);
             }
           },
         },
