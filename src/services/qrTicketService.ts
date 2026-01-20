@@ -199,10 +199,18 @@ export async function cancelQRTicket(
       .single();
 
     if (account) {
-      await supabase
+      const { error: updateError } = await supabase
         .from('accounts')
         .update({ balance: account.balance + ticket.fare })
         .eq('id', accountId);
+
+      if (updateError) {
+        console.error('Error refunding balance:', updateError);
+        return { success: true, refundAmount: 0, error: '払い戻しに失敗しましたが、チケットはキャンセルされました' };
+      }
+    } else {
+      console.error('Failed to fetch account for refund');
+      return { success: true, refundAmount: 0, error: '払い戻しに失敗しましたが、チケットはキャンセルされました' };
     }
   }
 

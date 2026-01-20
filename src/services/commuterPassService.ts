@@ -154,9 +154,25 @@ export async function purchaseCommuterPass(
 }
 
 /**
- * 定期券をキャンセル
+ * 定期券をキャンセル（払い戻し）
  */
-export async function cancelCommuterPass(passId: string): Promise<boolean> {
+export async function cancelCommuterPass(
+  passId: string,
+  accountId: string
+): Promise<{ success: boolean; refundAmount?: number; error?: string }> {
+  // 定期券情報を取得
+  const { data: pass, error: fetchError } = await supabase
+    .from('commuter_passes')
+    .select('*')
+    .eq('id', passId)
+    .eq('status', 'active')
+    .single();
+
+  if (fetchError || !pass) {
+    return { success: false, error: 'キャンセル可能な定期券が見つかりません' };
+  }
+
+  // 定期券をキャンセル
   const { error } = await supabase
     .from('commuter_passes')
     .update({ status: 'canceled' })
@@ -164,10 +180,32 @@ export async function cancelCommuterPass(passId: string): Promise<boolean> {
 
   if (error) {
     console.error('Error canceling commuter pass:', error);
-    return false;
+    return { success: false, error: '定期券のキャンセルに失敗しました' };
   }
 
-  return true;
+  // 残高を返金
+  const { data: account } = await supabase
+    .from('accounts')
+    .select('balance')
+    .eq('id', accountId)
+    .single();
+
+  if (account) {
+    const { error: refundError } = await supabase
+      .from('accounts')
+      .update({ balance: account.balance + pass.price })
+      .eq('id', accountId);
+
+    if (refundError) {
+      console.error('Error refunding balance:', refundError);
+      return { success: true, refundAmount: 0, error: '払い戻しに失敗しましたが、定期券はキャンセルされました' };
+    }
+  } else {
+    console.error('Failed to fetch account for refund');
+    return { success: true, refundAmount: 0, error: '払い戻しに失敗しましたが、定期券はキャンセルされました' };
+  }
+
+  return { success: true, refundAmount: pass.price };
 }
 
 /**
