@@ -29,6 +29,9 @@ export default function ChargeScreen() {
 
   const loadData = useCallback(async () => {
     if (!user) {
+      setAccount(null);
+      setPaymentMethods([]);
+      setSelectedPaymentMethod(null);
       setLoading(false);
       return;
     }
@@ -152,7 +155,7 @@ export default function ChargeScreen() {
             現在の残高
           </Text>
           <Text variant="displaySmall" style={styles.balanceAmount}>
-            ¥{account?.balance.toLocaleString() || '0'}
+            ¥{account?.balance?.toLocaleString() ?? '0'}
           </Text>
         </Card.Content>
       </Card>

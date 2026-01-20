@@ -46,6 +46,7 @@ export default function PaymentMethodsScreen() {
 
   const loadPaymentMethods = useCallback(async () => {
     if (!user) {
+      setPaymentMethods([]);
       setLoading(false);
       return;
     }
