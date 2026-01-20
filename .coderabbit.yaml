@@ -18,8 +18,8 @@ reviews:
         - UIコンポーネントには 'react-native-paper' を優先的に使用しているか確認してください。
         - 命名規則は PascalCase (コンポーネント) と camelCase (関数・変数) を遵守してください。
         - モック決済ロジックにおいて、実際の金銭取引が発生しないよう安全性が保たれているか確認してください。
-  ignore:
-    - "node_modules/**"
-    - "assets/**"
-    - "*.lock"
-    - ".expo/**"
+  path_filters:
+    - "!node_modules/**"
+    - "!assets/**"
+    - "!*.lock"
+    - "!.expo/**"

@@ -28,7 +28,10 @@ export default function ChargeScreen() {
   const [charging, setCharging] = useState(false);
 
   const loadData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const [accountData, methodsData, defaultMethod] = await Promise.all([

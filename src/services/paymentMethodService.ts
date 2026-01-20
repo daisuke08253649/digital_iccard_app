@@ -57,10 +57,14 @@ export async function addPaymentMethod(
 ): Promise<PaymentMethod | null> {
   // 他の支払い方法のデフォルトを解除
   if (isDefault) {
-    await supabase
+    const { error: clearError } = await supabase
       .from('payment_methods')
       .update({ is_default: false })
       .eq('user_id', userId);
+    if (clearError) {
+      console.error('Error clearing default payment methods:', clearError);
+      return null;
+    }
   }
 
   const { data, error } = await supabase
@@ -117,14 +121,22 @@ export async function setDefaultPaymentMethod(
     return false;
   }
 
-  // 新しいデフォルトを設定
-  const { error: setError } = await supabase
+  // 新しいデフォルトを設定（user_idでも絞り込み、更新結果を検証）
+  const { data, error: setError } = await supabase
     .from('payment_methods')
     .update({ is_default: true })
-    .eq('id', paymentMethodId);
+    .eq('id', paymentMethodId)
+    .eq('user_id', userId)
+    .select()
+    .single();
 
   if (setError) {
     console.error('Error setting default payment method:', setError);
+    return false;
+  }
+
+  if (!data) {
+    console.error('No payment method was updated - invalid paymentMethodId or userId');
     return false;
   }
 

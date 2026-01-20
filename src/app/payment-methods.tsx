@@ -45,7 +45,10 @@ export default function PaymentMethodsScreen() {
   const [saving, setSaving] = useState(false);
 
   const loadPaymentMethods = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const methods = await getPaymentMethods(user.id);
     setPaymentMethods(methods);
