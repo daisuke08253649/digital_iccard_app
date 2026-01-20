@@ -215,6 +215,7 @@ Phase 2ではSQLマイグレーションファイルのみのため、チェッ�
 ## 注意
 
 - ブランチを切る際、ブランチの命名に気を付けること
+- フェーズごとではなく、各機能、各画面ごとにブランチを切ること
   └ NG: feature/phase3-ui-ux
   └ OK: feature/auth, feature/tagなど
   ※「phase」を含まない
