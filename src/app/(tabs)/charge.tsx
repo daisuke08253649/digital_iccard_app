@@ -1,20 +1,120 @@
+import { useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, Text, Button } from 'react-native-paper';
+import {
+  Card,
+  Text,
+  Button,
+  ActivityIndicator,
+} from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { useAuth } from '../../contexts/AuthContext';
+import { getAccount, executeCharge } from '../../services/accountService';
+import {
+  getPaymentMethods,
+  getDefaultPaymentMethod,
+  getPaymentTypeDisplayName,
+} from '../../services/paymentMethodService';
+import { Account, PaymentMethod } from '../../types/database';
+
+const CHARGE_AMOUNTS = [1000, 2000, 3000, 5000, 10000];
 
 export default function ChargeScreen() {
-  const chargeAmounts = [1000, 2000, 3000, 5000, 10000];
+  const { user } = useAuth();
+  const [account, setAccount] = useState<Account | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [charging, setCharging] = useState(false);
 
-  const handleCharge = (amount: number) => {
-    // TODO: Phase 4でモックチャージ機能を実装
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+
+    const [accountData, methodsData, defaultMethod] = await Promise.all([
+      getAccount(user.id),
+      getPaymentMethods(user.id),
+      getDefaultPaymentMethod(user.id),
+    ]);
+
+    setAccount(accountData);
+    setPaymentMethods(methodsData);
+    setSelectedPaymentMethod(defaultMethod);
+    setLoading(false);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
+  const handleCharge = async (amount: number) => {
+    if (!account) {
+      Alert.alert('エラー', 'アカウント情報が取得できません');
+      return;
+    }
+
+    if (!selectedPaymentMethod) {
+      Alert.alert(
+        '支払い方法未設定',
+        'チャージするには支払い方法を設定してください',
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '設定する',
+            onPress: () => router.push('/payment-methods'),
+          },
+        ]
+      );
+      return;
+    }
+
     Alert.alert(
-      'チャージ機能',
-      `¥${amount.toLocaleString()}のチャージ機能は現在開発中です（Phase 4で実装予定）`
+      'チャージ確認',
+      `¥${amount.toLocaleString()}をチャージしますか？\n\n支払い方法: ${selectedPaymentMethod.display_name || getPaymentTypeDisplayName(selectedPaymentMethod.type)}\n\n※デモモード: 実際の決済は行われません`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: 'チャージする',
+          onPress: async () => {
+            setCharging(true);
+            const result = await executeCharge(
+              account.id,
+              amount,
+              selectedPaymentMethod.id
+            );
+            setCharging(false);
+
+            if (result.success) {
+              Alert.alert(
+                'チャージ完了',
+                `¥${amount.toLocaleString()}をチャージしました\n新しい残高: ¥${result.newBalance?.toLocaleString()}`
+              );
+              // アカウント情報を更新
+              const updatedAccount = await getAccount(user!.id);
+              setAccount(updatedAccount);
+            } else {
+              Alert.alert('エラー', result.error || 'チャージに失敗しました');
+            }
+          },
+        },
+      ]
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>読み込み中...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
+      {/* デモモード表示 */}
       <Card style={styles.infoCard}>
         <Card.Content style={styles.infoContent}>
           <MaterialCommunityIcons name="information" size={48} color="#1976d2" />
@@ -27,11 +127,82 @@ export default function ChargeScreen() {
         </Card.Content>
       </Card>
 
+      {/* 現在の残高 */}
+      <Card style={styles.balanceCard}>
+        <Card.Content>
+          <Text variant="titleSmall" style={styles.balanceLabel}>
+            現在の残高
+          </Text>
+          <Text variant="displaySmall" style={styles.balanceAmount}>
+            ¥{account?.balance.toLocaleString() || '0'}
+          </Text>
+        </Card.Content>
+      </Card>
+
+      {/* 支払い方法選択 */}
+      <View style={styles.section}>
+        <Text variant="titleMedium" style={styles.sectionTitle}>
+          支払い方法
+        </Text>
+        {paymentMethods.length === 0 ? (
+          <Card style={styles.noPaymentCard}>
+            <Card.Content style={styles.noPaymentContent}>
+              <MaterialCommunityIcons name="credit-card-off" size={32} color="#999" />
+              <Text variant="bodyMedium" style={styles.noPaymentText}>
+                支払い方法が登録されていません
+              </Text>
+              <Button
+                mode="contained"
+                onPress={() => router.push('/payment-methods')}
+                style={styles.addPaymentButton}
+              >
+                支払い方法を追加
+              </Button>
+            </Card.Content>
+          </Card>
+        ) : (
+          <Card style={styles.paymentMethodCard}>
+            <Card.Content>
+              <View style={styles.paymentMethodRow}>
+                <View style={styles.paymentMethodInfo}>
+                  <MaterialCommunityIcons
+                    name={selectedPaymentMethod?.type === 'credit_card' ? 'credit-card' : 'cellphone'}
+                    size={24}
+                    color="#1976d2"
+                  />
+                  <View style={styles.paymentMethodText}>
+                    <Text variant="titleMedium">
+                      {selectedPaymentMethod?.display_name ||
+                        (selectedPaymentMethod
+                          ? getPaymentTypeDisplayName(selectedPaymentMethod.type)
+                          : '未選択')}
+                    </Text>
+                    {selectedPaymentMethod && (
+                      <Text variant="bodySmall" style={styles.paymentMethodType}>
+                        {getPaymentTypeDisplayName(selectedPaymentMethod.type)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <Button
+                  mode="outlined"
+                  compact
+                  onPress={() => router.push('/payment-methods')}
+                >
+                  変更
+                </Button>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+      </View>
+
+      {/* チャージ金額選択 */}
       <View style={styles.section}>
         <Text variant="titleMedium" style={styles.sectionTitle}>
           チャージ金額を選択
         </Text>
-        {chargeAmounts.map((amount) => (
+        {CHARGE_AMOUNTS.map((amount) => (
           <Card key={amount} style={styles.amountCard}>
             <Card.Content style={styles.amountCardContent}>
               <Text variant="titleLarge" style={styles.amountText}>
@@ -40,6 +211,8 @@ export default function ChargeScreen() {
               <Button
                 mode="contained"
                 onPress={() => handleCharge(amount)}
+                loading={charging}
+                disabled={charging || !selectedPaymentMethod}
                 style={styles.chargeButton}
               >
                 チャージ
@@ -49,6 +222,7 @@ export default function ChargeScreen() {
         ))}
       </View>
 
+      {/* 注意事項 */}
       <Card style={styles.noteCard}>
         <Card.Content>
           <Text variant="titleSmall" style={styles.noteTitle}>
@@ -61,7 +235,10 @@ export default function ChargeScreen() {
             • 実際の決済は行われません
           </Text>
           <Text variant="bodySmall" style={styles.noteText}>
-            • Phase 4で完全なモック実装を予定しています
+            • 1回のチャージ上限: ¥50,000
+          </Text>
+          <Text variant="bodySmall" style={styles.noteText}>
+            • 残高上限: ¥200,000
           </Text>
         </Card.Content>
       </Card>
@@ -73,6 +250,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    color: '#666',
   },
   infoCard: {
     margin: 16,
@@ -91,6 +277,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
   },
+  balanceCard: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  balanceLabel: {
+    color: '#666',
+    marginBottom: 4,
+  },
+  balanceAmount: {
+    fontWeight: 'bold',
+    color: '#1976d2',
+  },
   section: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -98,6 +297,36 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: 12,
     fontWeight: 'bold',
+  },
+  noPaymentCard: {
+    backgroundColor: '#fafafa',
+  },
+  noPaymentContent: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  noPaymentText: {
+    marginTop: 8,
+    marginBottom: 16,
+    color: '#666',
+  },
+  addPaymentButton: {},
+  paymentMethodCard: {},
+  paymentMethodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  paymentMethodInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  paymentMethodText: {
+    marginLeft: 12,
+  },
+  paymentMethodType: {
+    color: '#666',
   },
   amountCard: {
     marginBottom: 12,
